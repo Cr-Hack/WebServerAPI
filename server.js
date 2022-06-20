@@ -65,6 +65,15 @@ require('./routes/base_routes')(app);
 /**
  * Method to start the server on port 5000.
  */
+
+const bcrypt = require("./controller/bcrypt.js"); 
+
+
+
+const mysql_init = require("./controller/mysqlInit.js"); 
+
 app.listen(5000, () => {
     console.log("Server has started!")
+    setTimeout(() => {mysql_init(pool_SQL)}, 15000) 
 })
+
