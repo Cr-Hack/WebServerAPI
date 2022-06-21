@@ -19,9 +19,10 @@ module.exports = function(app) {
         //res.json({ message: "Server lives!!!" });
     });
 
+    // Authentification
+
     const auth_control = require("./auth_control")
     app.post("/auth/register", auth_control.register)
-        
-    // Other Routes
 
+    app.post("/auth/login", auth_control.login)
 };

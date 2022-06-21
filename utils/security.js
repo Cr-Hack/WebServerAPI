@@ -3,42 +3,39 @@ exports.verify_injection = function(value) {
     return result != null
 }
 
-exports.verify_length = function(value, max, min = 1){
+exports.verify_length = function(value, max, min = 1) {
     return value.length >= min && value.length <= max
 }
 
-exports.verify_email = function(value){
+exports.verify_email = function(value) {
     var result = value.match(/^(?!\.)[\w_.-]*[^.]@\w+\.\w+(\.\w+)?[^.\W]$/g)
     return result != null && result.length == 1 && result[0] == value
 }
 
-exports.verify_existAccount = function(first_name,last_name,email){
-    pool_SQL.query(
-        'SELECT * FROM users WHERE UPPER(first_name) = UPPER(?) AND UPPER(last_name) = UPPER(?) AND UPPER(email) = UPPER(?)', [first_name, last_name, email], (error, results) =>{
-            if(error){
+exports.verify_existAccount = function(mysql, first_name, last_name, email, callback) {
+    mysql.query(
+        'SELECT * FROM users WHERE UPPER(firstname) = UPPER(?) AND UPPER(lastname) = UPPER(?) AND UPPER(email) = UPPER(?)', [first_name, last_name, email], (error, results) => {
+            if (error) {
                 console.log("message : erreur")
-                return -1
-            }
-            else if (results.length > 0){
+                console.log(error)
+                callback(-1)
+            } else if (results.length > 0) {
                 console.log("Results:")
                 console.log(results);
                 console.log("message : Utilisateur présent dans la base de donnée")
-                return 0
-            }
-            else {
+                callback(0)
+            } else {
                 console.log("results : ")
                 console.log(results);
                 console.log("message : L'utilisateur n'est pas présent dans la base de donnée")
-                return 1
+                callback(1)
             }
         }
     )
 }
 
-exports.verify_space = function(first_name,last_name,email){
-    // pool_SQL.query(
-    //     'SELECT * FROM users WHERE UPPER(first_name) = UPPER(?) AND UPPER(last_name) = UPPER(?) AND UPPER(email) = UPPER(?)', first_name, last_name, email, (error, results) =>{
-    first_name.replace(/^ *| *$|(  +)/g, '')        
-    last_name.replace(/^ *| *$|(  +)/g, '')        
-    email.replace(/^ *| *$|(  +)/g, '')          
+exports.verify_space = function(first_name, last_name, email) {
+    first_name.replace(/^ *| *$|(  +)/g, '')
+    last_name.replace(/^ *| *$|(  +)/g, '')
+    email.replace(/^ *| *$|(  +)/g, '')
 }
