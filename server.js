@@ -33,11 +33,15 @@ app.use(express.urlencoded({ extended: true }));
 
 const auth_config = require("./config/auth_conf.js")
 
+const bcrypt = require("./controller/bcrypt.js");
 
 /**
  * Default actions when a user use the API.
  */
 app.use((req, res, next) => {
+    // Default distributed modules
+    req.pool_SQL = pool_SQL
+    req.bcrypt = bcrypt
     if (req.headers && req.headers.authorization &&
         req.headers.authorization.split(' ')[0] === 'JWT') {
         jwt.verify(
@@ -46,13 +50,11 @@ app.use((req, res, next) => {
             (err, decode) => {
                 if (err) req.user = undefined;
                 req.user = decode;
-                req.pool_SQL = pool_SQL
                 next();
             }
         );
     } else {
         req.user = undefined;
-        req.pool_SQL = pool_SQL
         next();
     }
 })
@@ -65,15 +67,9 @@ require('./routes/base_routes')(app);
 /**
  * Method to start the server on port 5000.
  */
-
-const bcrypt = require("./controller/bcrypt.js"); 
-
-
-
-const mysql_init = require("./controller/mysqlInit.js"); 
+const mysql_init = require("./controller/mysqlInit.js");
 
 app.listen(5000, () => {
     console.log("Server has started!")
-    setTimeout(() => {mysql_init(pool_SQL)}, 15000) 
+    setTimeout(() => { mysql_init(pool_SQL) }, 15000)
 })
-
