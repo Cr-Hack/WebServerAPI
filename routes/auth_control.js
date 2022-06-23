@@ -1,19 +1,28 @@
 const sec = require("../utils/security")
 const mysql_controller = require("../controller/mysql_controler")
-const auth_confif = require("../config/auth_conf")
+const auth_config = require("../config/auth_conf")
 
 exports.register = function(req, res) {
     let body = req.body
     if (
-        body.last_name == undefined || body.first_name == undefined || body.email == undefined || body.hashpassword == undefined ||
+        body.last_name == undefined ||
+        body.first_name == undefined ||
+        body.email == undefined ||
+        body.hashpassword == undefined ||
+        body.privatekey == undefined ||
+        body.publickey == undefined ||
         sec.verify_injection(body.last_name) ||
         sec.verify_injection(body.first_name) ||
         sec.verify_injection(body.email) ||
         sec.verify_injection(body.hashpassword) ||
+        sec.verify_injection(body.privatekey) ||
+        sec.verify_injection(body.publickey) ||
         !sec.verify_length(body.last_name, 50) ||
         !sec.verify_length(body.first_name, 50) ||
         !sec.verify_length(body.email, 250) ||
         !sec.verify_length(body.hashpassword, 4000) ||
+        !sec.verify_length(body.privatekey, 4500) ||
+        !sec.verify_length(body.publickey, 4500) ||
         !sec.verify_email(body.email)) {
         res.status(400).send({
             error: "Incorrect request input"
@@ -36,7 +45,7 @@ exports.register = function(req, res) {
                         (err, bcryptedPass) => {
                             if (bcryptedPass) {
                                 req.pool_SQL.query(
-                                    'INSERT INTO users (firstname, lastname, email, hashed_pass) VALUES (?,?,?,?)', [body.first_name, body.last_name, body.email, bcryptedPass],
+                                    'INSERT INTO users (firstname, lastname, email, hashed_pass, privatekey, publickey) VALUES (?,?,?,?,?,?)', [body.first_name, body.last_name, body.email, bcryptedPass, body.privatekey, body.publickey],
                                     (error, results) => {
                                         if (error) {
                                             console.log(error)
@@ -83,16 +92,31 @@ exports.login = function(req, res) {
                 if (error) {
                     res.status(500).send({ error: "Error with mysql database." })
                 } else if (result) {
-                    if (req.bcrypt.comparePassword(body.hashpassword, result.hashed_pass)) {
-                        let token = jwt.sign(result,
-                            auth_confif.secret, { expiresIn: 86400 } // expires in 24 hours
-                        );
-                        console.log('User auth !!!')
-                        res.status(202).send({ token: token, publicKey: result.publickey, privateKey: result.privatekey })
-                    } else {
-                        console.log('User and pass no match. aborting.')
-                        res.status(400).send({ error: "User and password doesn't match." })
-                    }
+                    req.bcrypt.comparePassword(body.hashpassword, result.hashed_pass,
+                        (err, isPasswordMatch) => {
+                            if (err) {
+                                console.log('Error when hashing password')
+                                res.status(400).send({ error: "Error when hashing password" })
+                            } else if (isPasswordMatch) {
+                                result
+                                let token = req.jwt.sign({
+                                        userID: result.userID,
+                                        firstname: result.firstname,
+                                        lastname: result.lastname,
+                                        email: result.email,
+                                        privatekey: result.privatekey,
+                                        publickey: result.publickey
+                                    },
+                                    auth_config.secret, { expiresIn: 86400 } // expires in 24 hours
+                                );
+                                console.log('User auth !!!')
+                                res.status(202).send({ token: token, publicKey: result.publickey, privateKey: result.privatekey })
+                            } else {
+                                console.log('User and pass no match. aborting.')
+                                res.status(400).send({ error: "User and password doesn't match." })
+                            }
+                        }
+                    )
                 } else {
                     console.log('There is no user with this auth (login)')
                     res.status(400).send({ error: "There is no user with that first_name, last_name and email." })

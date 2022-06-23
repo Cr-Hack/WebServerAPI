@@ -42,6 +42,7 @@ app.use((req, res, next) => {
     // Default distributed modules
     req.pool_SQL = pool_SQL
     req.bcrypt = bcrypt
+    req.jwt = jwt
     if (req.headers && req.headers.authorization &&
         req.headers.authorization.split(' ')[0] === 'JWT') {
         jwt.verify(
