@@ -42,3 +42,40 @@ exports.verify_space = function(first_name,last_name,email){
     last_name.replace(/^ *| *$|(  +)/g, '')        
     email.replace(/^ *| *$|(  +)/g, '')          
 }
+
+exports.verify_existFile = function(){
+    pool_SQL.query(
+        'SELECT * FROM Files', (error, results) => {
+            if(error){
+                console.log("message : erreur")
+                return -1
+            }
+            else if (results.length > 0){
+                console.log("Results:")
+                console.log(results);
+                console.log("message : La table Files n'est pas vide")
+                return 0
+            }
+            else {
+                console.log(results);
+                console.log("message : La table Files est vide")
+                return 1
+            }
+        }
+    )
+}
+
+exports.connectionUsersFiles = function (){
+    pool_SQL.query(
+        'SELECT * FROM have_acces h INNER JOIN Users u ON u.UsersID = h.UsersID INNER JOIN Files f ON f.FilesID = h.FilesID', (error, results) => {
+            if(error){
+                console.log("message : erreur")
+                return -1
+            }
+            else{
+                console.log("Succes")
+                return 1
+            }
+        }
+    )
+}
