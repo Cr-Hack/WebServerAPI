@@ -16,14 +16,11 @@ var pool_SQL = sql.createPool(mysql_config)
 const app = express();
 
 // If we use cors then:
-/* 
-var corsOptions = {
-    origin: "https://HOSTNAME:8081"
-};
 
-const app = express();
-app.use(cors(corsOptions));
-*/
+// var corsOptions = {
+//     origin: "https://HOSTNAME:8081"
+// };
+// app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
 app.use(express.json());
@@ -43,10 +40,9 @@ app.use((req, res, next) => {
     req.pool_SQL = pool_SQL
     req.bcrypt = bcrypt
     req.jwt = jwt
-    if (req.headers && req.headers.authorization &&
-        req.headers.authorization.split(' ')[0] === 'JWT') {
+    if (req.headers && req.headers.token) {
         jwt.verify(
-            req.headers.authorization.split(' ')[1],
+            req.headers.token,
             auth_config.secret,
             (err, decode) => {
                 if (err) req.user = undefined;
@@ -72,5 +68,5 @@ const mysql_init = require("./controller/mysqlInit.js");
 
 app.listen(5000, () => {
     console.log("Server has started!")
-    setTimeout(() => { mysql_init(pool_SQL) }, 15000)
+    setTimeout(() => { mysql_init(pool_SQL) }, 5000)
 })

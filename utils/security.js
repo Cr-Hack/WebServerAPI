@@ -56,15 +56,14 @@ exports.verify_existAccount = function(mysql, first_name, last_name, email, call
 //     )
 // }
 
-exports.connectionUsersFiles = function (mysql, user, callback){
+exports.connectionUsersFiles = function(mysql, user, callback) {
     mysql.query(
-        'SELECT * FROM have_acces h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [user.userID], 
+        'SELECT * FROM have_acces h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [user.userID],
         (error, results) => {
-            if(error){
+            if (error) {
                 console.log("message : erreur")
                 callback(-1)
-            }
-            else{
+            } else {
                 console.log("Succes")
                 callback(1)
             }
@@ -77,4 +76,14 @@ exports.verify_space = function(first_name, last_name, email) {
     last_name.replace(/^ *| *$|(  +)/g, '')
     email.replace(/^ *| *$|(  +)/g, '')
 
+}
+
+exports.verify_auth = function(req, res, next) {
+    if (req.user != undefined) {
+        next()
+    } else {
+        res.status(400).send({
+            error: "Your are not authentificated !"
+        })
+    }
 }
