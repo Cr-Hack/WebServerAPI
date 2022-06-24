@@ -27,6 +27,7 @@ module.exports = function(app) {
         
     const file_control = require("./file_control")
     app.post("/file/view", file_control.view )
+    app.post("/file/delete", file_control.delete )
     // Other Routes
 
     app.post("/auth/login", auth_control.login)

@@ -34,43 +34,44 @@ exports.verify_existAccount = function(mysql, first_name, last_name, email, call
     )
 }
 
-exports.verify_existFile = function(){
-    pool_SQL.query(
-        'SELECT * FROM Files', (error, results) => {
+// exports.verify_existFile = function(){
+//     pool_SQL.query(
+//         'SELECT * FROM Files', (error, results) => {
+//             if(error){
+//                 console.log("message : erreur")
+//                 return -1
+//             }
+//             else if (results.length > 0){
+//                 console.log("Results:")
+//                 console.log(results);
+//                 console.log("message : La table Files n'est pas vide")
+//                 return 0
+//             }
+//             else {
+//                 console.log(results);
+//                 console.log("message : La table Files est vide")
+//                 return 1
+//             }
+//         }
+//     )
+// }
+
+exports.connectionUsersFiles = function (mysql, user, callback){
+    mysql.query(
+        'SELECT * FROM have_acces h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [user.userID], 
+        (error, results) => {
             if(error){
                 console.log("message : erreur")
-                return -1
+                callback(-1)
             }
-            else if (results.length > 0){
-                console.log("Results:")
-                console.log(results);
-                console.log("message : La table Files n'est pas vide")
-                return 0
-            }
-            else {
-                console.log(results);
-                console.log("message : La table Files est vide")
-                return 1
+            else{
+                console.log("Succes")
+                callback(1)
             }
         }
     )
 }
 
-exports.connectionUsersFiles = function (){
-    pool_SQL.query(
-        'SELECT * FROM have_acces h INNER JOIN Users u ON u.UsersID = h.UsersID INNER JOIN Files f ON f.FilesID = h.FilesID', (error, results) => {
-            if(error){
-                console.log("message : erreur")
-                return -1
-            }
-            else{
-                console.log("Succes")
-                return 1
-            }
-        }
-    )
-    }
-    
 exports.verify_space = function(first_name, last_name, email) {
     first_name.replace(/^ *| *$|(  +)/g, '')
     last_name.replace(/^ *| *$|(  +)/g, '')
