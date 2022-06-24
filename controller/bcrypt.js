@@ -13,8 +13,6 @@ exports.cryptPassword = function(password, callback) {
 
 exports.comparePassword = function(plainPass, hashword, callback) {
     bcrypt.compare(plainPass, hashword, function(err, isPasswordMatch) {
-        return err == null ?
-            callback(null, isPasswordMatch) :
-            callback(err);
+        return err == null ? callback(null, isPasswordMatch) : callback(err, null);
     });
 };
