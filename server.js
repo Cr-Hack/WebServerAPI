@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require("express");
+const fileupload = require("express-fileupload");
 
 const sql = require("mysql");
 
@@ -23,10 +24,13 @@ const app = express();
 // app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
-app.use(express.json());
+app.use(express.json())
 
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }))
+
+// Enabeling file upload
+app.use(fileupload({ createParentPath: true }))
 
 const auth_config = require("./config/auth_conf.js")
 

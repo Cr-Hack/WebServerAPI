@@ -6,8 +6,8 @@ module.exports = function(mysql) {
             lastname VARCHAR(50) NOT NULL,
             email VARCHAR(250) NOT NULL,
             hashed_pass VARCHAR(4000) NOT NULL,
-            privatekey VARCHAR(4500) NOT NULL,
-            publickey VARCHAR(4500) NOT NULL,
+            privatekey BLOB NOT NULL,
+            publickey BLOB NOT NULL,
             PRIMARY KEY(userID) 
          );`,
         function(err, result) {
@@ -36,10 +36,10 @@ module.exports = function(mysql) {
             userID INT,
             fileID INT,
             sender VARCHAR(250) NOT NULL,
-            publickey VARCHAR(4500) NOT NULL,
+            publickey BLOB NOT NULL,
             PRIMARY KEY(userID, fileID),
             FOREIGN KEY(userID) REFERENCES users(userID),
-            FOREIGN KEY(fileID) REFERENCES files(fileID)
+            FOREIGN KEY(fileID) REFERENCES files(fileID) ON DELETE CASCADE
          );`,
         function(err, result) {
             if (err) throw err;

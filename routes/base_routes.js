@@ -25,10 +25,15 @@ module.exports = function(app) {
     app.post("/auth/login", auth_control.login)
 
 
-    // Files
+    // Files Operation
     const sec = require("../utils/security")
     const file_control = require("./file_control")
     app.post("/file/view", sec.verify_auth, file_control.view)
     app.post("/file/delete", sec.verify_auth, file_control.delete)
+    app.post("/file/upload", sec.verify_auth, file_control.upload)
+        //app.post("/file/download", sec.verify_auth, file_control.download)
 
+    // Features
+    //app.post("/info/id", sec.verify_auth, file_control.download)
+    // app.post("/info/search", sec.verify_auth, file_control.download)
 };

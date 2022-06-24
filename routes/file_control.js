@@ -1,4 +1,6 @@
 const sec = require("../utils/security")
+const uuid = require("uuid")
+const mysql_controller = require("../controller/mysql_controler")
 
 exports.view = function(req, res) {
     req.pool_SQL.query(
@@ -60,7 +62,7 @@ exports.delete = function(req, res) {
         })
     } else {
         req.pool_SQL.query(
-            'delete f,h from files f inner join have_access h on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ?', [req.body.fileID],
+            'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ?', [req.body.fileID, req.user.userID],
             (error, results) => {
                 if (error) {
                     console.log(error)
@@ -80,3 +82,67 @@ exports.delete = function(req, res) {
         )
     }
 }
+
+exports.upload = async function(req, res) {
+    try {
+        let body = req.body
+        if (!req.files) {
+            res.status(400).send({
+                error: "No file uploaded"
+            })
+        } else if (!body.receiverID ||
+            !body.name ||
+            !body.type ||
+            !body.size ||
+            sec.verify_injection(body.receiverID) ||
+            sec.verify_injection(body.name) ||
+            sec.verify_injection(body.type) ||
+            sec.verify_injection(body.size)
+        ) {
+            res.status(400).send({
+                error: "Incorrect request input"
+            })
+        } else {
+            mysql_controller.getUserById(req.pool_SQL, body.receiverID,
+                (error, results) => {
+                    if (error) {
+                        res.status(500).send({
+                            error: "Error when trying to get the receiver"
+                        })
+                    } else if (!results || results.length == 0) {
+                        res.status(400).send({
+                            error: "There is no user with id" + body.receiverID
+                        })
+                    } else {
+                        let encryptedFile = req.files.encryptedFile
+                        let id = uuid.v4()
+                        let path = "/var/node/files/" + id + ".encrypted"
+                        encryptedFile.mv(path)
+                        console.log(encryptedFile)
+                        mysql_controller.insertNewFile(req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type, body.size, "Receiver key lol", "Sender key lol",
+                            (error) => {
+                                if (error) {
+                                    console.log(error)
+                                    res.status(500).send({
+                                        error: "Error when getting files from BDD"
+                                    })
+                                } else {
+                                    res.status(200).send({
+                                        message: "Yes !"
+                                    })
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({
+            error: "Error when uploading file"
+        })
+    }
+}
+
+exports.download = async function(req, res) {}
