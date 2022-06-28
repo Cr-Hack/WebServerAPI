@@ -4,7 +4,7 @@ const mysql_controller = require("../controller/mysql_controler")
 
 exports.view = function(req, res) {
     req.pool_SQL.query(
-            'SELECT f.name, f.path, f.type, f.size, f.datedeposite FROM have_access h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [req.user.userID],
+            'SELECT f.fileID, f.name, f.type, f.size, f.datedeposite FROM have_access h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [req.user.userID],
             (error, results) => {
                 if (error) {
                     console.log(error)
