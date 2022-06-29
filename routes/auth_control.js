@@ -15,14 +15,14 @@ exports.register = function(req, res) {
         sec.verify_injection(body.first_name) ||
         sec.verify_injection(body.email) ||
         sec.verify_injection(body.hashpassword) ||
-        sec.verify_injection(body.privatekey) ||
-        sec.verify_injection(body.publickey) ||
+        // sec.verify_injection(body.privatekey) ||
+        // sec.verify_injection(body.publickey) ||
         !sec.verify_length(body.last_name, 50) ||
         !sec.verify_length(body.first_name, 50) ||
         !sec.verify_length(body.email, 250) ||
         !sec.verify_length(body.hashpassword, 4000) ||
-        !sec.verify_length(body.privatekey, 4500) ||
-        !sec.verify_length(body.publickey, 4500) ||
+        // !sec.verify_length(body.privatekey, 4500) ||
+        // !sec.verify_length(body.publickey, 4500) ||
         !sec.verify_email(body.email)) {
         res.status(400).send({
             error: "Incorrect request input"
@@ -45,7 +45,7 @@ exports.register = function(req, res) {
                         (err, bcryptedPass) => {
                             if (bcryptedPass) {
                                 req.pool_SQL.query(
-                                    'INSERT INTO users (firstname, lastname, email, hashed_pass, privatekey, publickey) VALUES (?,?,?,?,?,?)', [body.first_name, body.last_name, body.email, bcryptedPass, body.privatekey, body.publickey],
+                                    'INSERT INTO users (firstname, lastname, email, hashed_pass, privatekey, publickey) VALUES (?,?,?,?,binary(?),binary(?))', [body.first_name, body.last_name, body.email, bcryptedPass, body.privatekey, body.publickey],
                                     (error, results) => {
                                         if (error) {
                                             console.log(error)

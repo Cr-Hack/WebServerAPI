@@ -8,7 +8,7 @@ const sql = require("mysql");
 const jwt = require('jsonwebtoken');
 
 // Do we need cors ?
-//const cors = require("cors");
+const cors = require("cors");
 
 const mysql_config = require("./config/mysql_conf.js")
 
@@ -18,10 +18,10 @@ const app = express();
 
 // If we use cors then:
 
-// var corsOptions = {
-//     origin: "https://HOSTNAME:8081"
-// };
-// app.use(cors(corsOptions));
+var corsOptions = {
+    origin: "http://localhost:8080"
+};
+app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
 app.use(express.json())
