@@ -3,7 +3,6 @@ module.exports = function(app) {
 
     // test server
     app.get("/", (req, res) => {
-        req.
         req.pool_SQL.query('SHOW TABLES;', function(error, results, fields) {
             if (error) {
                 console.log(error);

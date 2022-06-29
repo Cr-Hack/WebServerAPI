@@ -4,9 +4,13 @@ const mysql_controller = require("../controller/mysql_controller")
 exports.getPublicKey = function(req, res) {
     let body = req.body
     if (!body.userID ||
-        sec.verify_injection(body.id)
+        sec.verify_injection(body.userID)
     ) {
-        mysql_controller.getUserById(req.pool_SQL, body.id,
+        res.status(500).send({
+            error: "Incorrect inputs"
+        })
+    } else {
+        mysql_controller.getUserById(req.pool_SQL, body.userID,
             (error, results) => {
                 if (error || !results) {
                     console.log(error)
@@ -14,7 +18,7 @@ exports.getPublicKey = function(req, res) {
                         error: "The user does not exists"
                     })
                 } else {
-                    sec.status(200).send({
+                    res.status(200).send({
                         publickey: results.publickey
                     })
                 }
