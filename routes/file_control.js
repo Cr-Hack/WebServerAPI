@@ -1,6 +1,6 @@
 const sec = require("../utils/security")
 const uuid = require("uuid")
-const mysql_controller = require("../controller/mysql_controler")
+const mysql_controller = require("../controller/mysql_controller")
 
 exports.view = function(req, res) {
     req.pool_SQL.query(
@@ -11,7 +11,6 @@ exports.view = function(req, res) {
                     res.status(500).send({ message: "Error when getting files from BDD." })
                 } else {
                     if (results && results.length > 0) {
-                        console.log('-->results')
                         console.log(results)
                         res.status(200).json({
                             message: "Voici la table files",

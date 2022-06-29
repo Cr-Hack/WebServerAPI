@@ -1,5 +1,5 @@
 const sec = require("../utils/security")
-const mysql_controller = require("../controller/mysql_controler")
+const mysql_controller = require("../controller/mysql_controller")
 const auth_config = require("../config/auth_conf")
 
 exports.register = function(req, res) {

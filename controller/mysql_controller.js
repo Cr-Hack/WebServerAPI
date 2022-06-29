@@ -34,6 +34,24 @@ exports.getUserById = function(mysql, id, callback) {
     )
 }
 
+exports.getUserByEmail = function(mysql, email, callback) {
+    mysql.query(
+        "SELECT * FROM users WHERE UPPER(email) = UPPER(?)", [email],
+        (error, results) => {
+            if (error) {
+                console.log("Error with database.", error)
+                callback(error, null)
+            } else {
+                if (results == null || results.length == 0) {
+                    callback(null, null)
+                } else {
+                    callback(null, results[0])
+                }
+            }
+        }
+    )
+}
+
 exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, size, receiverKey, senderKey, callback) {
     mysql.getConnection(function(err, connection) {
         if (err) {

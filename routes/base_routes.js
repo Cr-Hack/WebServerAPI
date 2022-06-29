@@ -33,7 +33,7 @@ module.exports = function(app) {
     app.post("/file/upload", sec.verify_auth, file_control.upload)
         //app.post("/file/download", sec.verify_auth, file_control.download)
 
-    // Features
-    //app.post("/info/id", sec.verify_auth, file_control.download)
-    // app.post("/info/search", sec.verify_auth, file_control.download)
+    const user_control = require("./user_control")
+    app.post("/users/publickey", sec.verify_auth, user_control.getPublicKey)
+    app.post("/users/getid", sec.verify_auth, user_control.getId)
 };
