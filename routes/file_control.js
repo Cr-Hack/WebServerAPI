@@ -52,6 +52,8 @@ exports.view = function(req, res) {
         // )
 }
 
+const fs = require('fs')
+
 exports.delete = function(req, res) {
     let body = req.body
     if (
@@ -61,22 +63,39 @@ exports.delete = function(req, res) {
             error: "Incorrect request input"
         })
     } else {
-        req.pool_SQL.query(
-            'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ?', [req.body.fileID, req.user.userID],
+        mysql_controller.getFileById(req.pool_SQL, body.fileID, req.user.userID,
             (error, results) => {
-                if (error) {
-                    console.log(error)
-                    res.status(500).send({ message: error })
+                console.log(error, results)
+                if (error || !results) {
+                    res.status(400).send({
+                        error: "Il n'y a pas de fichier avec cet ID"
+                    })
                 } else {
-                    if (results && results.affectedRows > 0) {
-                        console.log('-->results')
-                        console.log(results)
-                        res.json({ message: "Le fichier est supprimé" })
-                    } else {
-                        console.log('-->results')
-                        console.log(results)
-                        res.json({ message: "Il n'y pas de fichier avec cet ID" })
-                    }
+                    let path = results.path
+                    req.pool_SQL.query(
+                        'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ?', [req.body.fileID, req.user.userID],
+                        (error, results) => {
+                            if (error) {
+                                console.log(error)
+                                res.status(500).send({ message: error })
+                            } else {
+                                if (results && results.affectedRows > 0) {
+                                    fs.unlink(path, (err) => {
+                                        if (err) {
+                                            console.error(err)
+                                            return
+                                        }
+                                    })
+                                    console.log(results)
+                                    res.json({ message: "Le fichier est supprimé" })
+                                } else {
+                                    console.log('-->results')
+                                    console.log(results)
+                                    res.json({ message: "Il n'y pas de fichier avec cet ID" })
+                                }
+                            }
+                        }
+                    )
                 }
             }
         )

@@ -86,3 +86,19 @@ exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, 
         }
     });
 }
+
+exports.getFileById = function(mysql, fileID, userID, callback) {
+    mysql.query(
+        "SELECT f.fileID, f.name, f.path, f.type, f.size, f.datedeposite FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ?", [userID, fileID],
+        (error, results) => {
+            if (error) {
+                console.log(error)
+                callback(error, null)
+            } else if (results && results.length > 0) {
+                callback(null, results[0])
+            } else {
+                callback(null, null)
+            }
+        }
+    )
+}
