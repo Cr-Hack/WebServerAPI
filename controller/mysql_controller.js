@@ -34,6 +34,24 @@ exports.getUserById = function(mysql, id, callback) {
     )
 }
 
+exports.getUserByEmail = function(mysql, email, callback) {
+    mysql.query(
+        "SELECT * FROM users WHERE UPPER(email) = UPPER(?)", [email],
+        (error, results) => {
+            if (error) {
+                console.log("Error with database.", error)
+                callback(error, null)
+            } else {
+                if (results == null || results.length == 0) {
+                    callback(null, null)
+                } else {
+                    callback(null, results[0])
+                }
+            }
+        }
+    )
+}
+
 exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, size, receiverKey, senderKey, callback) {
     mysql.getConnection(function(err, connection) {
         if (err) {
@@ -105,19 +123,17 @@ exports.findPath = function(mysql, id, callback) {
     )
 }
 
-exports.findName = function(mysql, id, callback) {
+exports.getFileById = function(mysql, fileID, userID, callback) {
     mysql.query(
-        "SELECT name FROM files WHERE fileID = ?", [id],
+        "SELECT f.fileID, f.name, f.path, f.type, f.size, f.datedeposite FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ?", [userID, fileID],
         (error, results) => {
             if (error) {
-                console.log("Error with database.", error)
+                console.log(error)
                 callback(error, null)
+            } else if (results && results.length > 0) {
+                callback(null, results[0])
             } else {
-                if (results == null || results.length == 0) {
-                    callback(null, null)
-                } else {
-                    callback(null, results[0])
-                }
+                callback(null, null)
             }
         }
     )
