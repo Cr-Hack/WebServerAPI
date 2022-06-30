@@ -12,21 +12,16 @@ exports.verify_email = function(value) {
     return result != null && result.length == 1 && result[0] == value
 }
 
-exports.verify_existAccount = function(mysql, first_name, last_name, email, callback) {
+exports.verify_existAccount = function(mysql, email, callback) {
     mysql.query(
-        'SELECT * FROM users WHERE UPPER(firstname) = UPPER(?) AND UPPER(lastname) = UPPER(?) AND UPPER(email) = UPPER(?)', [first_name, last_name, email], (error, results) => {
+        'SELECT * FROM users WHERE UPPER(email) = UPPER(?)', [email], (error, results) => {
             if (error) {
-                console.log("message : erreur")
                 console.log(error)
                 callback(-1)
             } else if (results.length > 0) {
-                console.log("Results:")
-                console.log(results);
                 console.log("message : Utilisateur présent dans la base de donnée")
                 callback(0)
             } else {
-                console.log("results : ")
-                console.log(results);
                 console.log("message : L'utilisateur n'est pas présent dans la base de donnée")
                 callback(1)
             }

@@ -88,7 +88,6 @@ exports.delete = function(req, res) {
                                     console.log(results)
                                     res.json({ message: "Le fichier est supprimé" })
                                 } else {
-                                    console.log('-->results')
                                     console.log(results)
                                     res.json({ message: "Il n'y pas de fichier avec cet ID" })
                                 }
@@ -163,7 +162,7 @@ exports.upload = async function(req, res) {
     }
 }
 
-exports.download = async function(req, res){
+exports.download = async function(req, res) {
     try {
         let body = req.body
         if (
@@ -173,24 +172,24 @@ exports.download = async function(req, res){
                 error: "Incorrect request input"
             })
         } else {
-                mysql_controller.findPath(req.pool_SQL, body.fileID, req.user.userID, 
+            mysql_controller.findPath(req.pool_SQL, body.fileID, req.user.userID,
                 (error, results) => {
                     if (error || !results) {
                         res.status(400).send({
-                            error: "Error with database."
+                            error: "The file does not exists"
                         })
                     } else {
                         res.download(results.path, function(error) {
                             if (error) {
                                 console.log(error)
-                                // res.status(500).send({
-                                //     error: "Error when getting files to BDD"
-                                // })
+                                    // res.status(500).send({
+                                    //     error: "Error when getting files to BDD"
+                                    // })
                             } else {
                                 console.log("Yes download")
-                                // res.status(200).send({
-                                //     message: "Yes download !"
-                                // })
+                                    // res.status(200).send({
+                                    //     message: "Yes download !"
+                                    // })
                             }
                         })
                     }

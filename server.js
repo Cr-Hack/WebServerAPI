@@ -19,7 +19,7 @@ const app = express();
 // If we use cors then:
 
 var corsOptions = {
-    origin: "http://localhost:8080"
+    origin: ("http://localhost", "*")
 };
 app.use(cors(corsOptions));
 
@@ -70,7 +70,17 @@ require('./routes/base_routes')(app);
  */
 const mysql_init = require("./controller/mysqlInit.js");
 
+function initmysql() {
+    setTimeout(() => {
+        try {
+            mysql_init(pool_SQL)
+        } catch (error) {
+            initmysql()
+        }
+    }, 5000)
+}
+
 app.listen(5000, () => {
+    initmysql()
     console.log("Server has started!")
-    setTimeout(() => { mysql_init(pool_SQL) }, 5000)
 })
