@@ -1,6 +1,6 @@
-exports.getUser = function(mysql, first_name, last_name, email, callback) {
+exports.getUser = function(mysql, email, callback) {
     mysql.query(
-        "SELECT * FROM users WHERE UPPER(firstname) = UPPER(?) AND UPPER(lastname) = UPPER(?) AND UPPER(email) = UPPER(?)", [first_name, last_name, email],
+        "SELECT * FROM users WHERE UPPER(email) = UPPER(?)", [email],
         (error, results) => {
             if (error) {
                 console.log("Error with database.", error)
@@ -85,4 +85,40 @@ exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, 
             callback(err)
         }
     });
+}
+
+exports.findPath = function(mysql, id, callback) {
+    mysql.query(
+        "SELECT path FROM files WHERE fileID = ?", [id],
+        (error, results) => {
+            if (error) {
+                console.log("Error with database.", error)
+                callback(error, null)
+            } else {
+                if (results == null || results.length == 0) {
+                    callback(null, null)
+                } else {
+                    callback(null, results[0])
+                }
+            }
+        }
+    )
+}
+
+exports.findName = function(mysql, id, callback) {
+    mysql.query(
+        "SELECT name FROM files WHERE fileID = ?", [id],
+        (error, results) => {
+            if (error) {
+                console.log("Error with database.", error)
+                callback(error, null)
+            } else {
+                if (results == null || results.length == 0) {
+                    callback(null, null)
+                } else {
+                    callback(null, results[0])
+                }
+            }
+        }
+    )
 }

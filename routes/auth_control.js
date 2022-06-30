@@ -74,20 +74,16 @@ exports.register = function(req, res) {
 exports.login = function(req, res) {
     let body = req.body
     if (
-        body.last_name == undefined || body.first_name == undefined || body.email == undefined || body.hashpassword == undefined ||
-        sec.verify_injection(body.first_name) ||
-        sec.verify_injection(body.last_name) ||
+        body.email == undefined || body.hashpassword == undefined ||
         sec.verify_injection(body.email) ||
         sec.verify_injection(body.hashpassword) ||
-        !sec.verify_length(body.first_name, 50) ||
-        !sec.verify_length(body.last_name, 50) ||
         !sec.verify_length(body.email, 250) ||
         !sec.verify_email(body.email)
     ) {
         console.log('User has bad request variables (login)')
         res.status(400).send({ error: "Incorrect request input" })
     } else {
-        mysql_controller.getUser(req.pool_SQL, body.first_name, body.last_name, body.email,
+        mysql_controller.getUser(req.pool_SQL, body.email,
             (error, result) => {
                 if (error) {
                     res.status(500).send({ error: "Error with mysql database." })
@@ -101,8 +97,6 @@ exports.login = function(req, res) {
                                 result
                                 let token = req.jwt.sign({
                                         userID: result.userID,
-                                        firstname: result.firstname,
-                                        lastname: result.lastname,
                                         email: result.email,
                                         privatekey: result.privatekey,
                                         publickey: result.publickey
@@ -119,7 +113,7 @@ exports.login = function(req, res) {
                     )
                 } else {
                     console.log('There is no user with this auth (login)')
-                    res.status(400).send({ error: "There is no user with that first_name, last_name and email." })
+                    res.status(400).send({ error: "There is no user with that email." })
                 }
             }
         )

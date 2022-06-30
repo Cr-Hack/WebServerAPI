@@ -145,4 +145,44 @@ exports.upload = async function(req, res) {
     }
 }
 
-exports.download = async function(req, res) {}
+exports.download = async function(req, res){
+    try {
+        let body = req.body
+        if (
+            body.fileID == undefined ||
+            sec.verify_injection(body.fileID)) {
+            res.status(400).send({
+                error: "Incorrect request input"
+            })
+        } else {
+                mysql_controller.findPath(req.pool_SQL, body.fileID, 
+                (error, results) => {
+                    if (error || !results) {
+                        res.status(400).send({
+                            error: "Error with database."
+                        })
+                    } else {
+                        res.download(results.path, function(error) {
+                            if (error) {
+                                console.log(error)
+                                // res.status(500).send({
+                                //     error: "Error when getting files to BDD"
+                                // })
+                            } else {
+                                console.log("Yes download")
+                                // res.status(200).send({
+                                //     message: "Yes download !"
+                                // })
+                            }
+                        })
+                    }
+                }
+            )
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(500).send({
+            error: "Error when downloding file"
+        })
+    }
+}

@@ -31,7 +31,7 @@ module.exports = function(app) {
     app.post("/file/view", sec.verify_auth, file_control.view)
     app.post("/file/delete", sec.verify_auth, file_control.delete)
     app.post("/file/upload", sec.verify_auth, file_control.upload)
-        //app.post("/file/download", sec.verify_auth, file_control.download)
+    app.get("/file/download", sec.verify_auth, file_control.download)
 
     // Features
     //app.post("/info/id", sec.verify_auth, file_control.download)
