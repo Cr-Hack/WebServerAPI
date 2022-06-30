@@ -30,7 +30,7 @@ module.exports = function(app) {
     app.post("/file/view", sec.verify_auth, file_control.view)
     app.post("/file/delete", sec.verify_auth, file_control.delete)
     app.post("/file/upload", sec.verify_auth, file_control.upload)
-    app.get("/file/download", sec.verify_auth, file_control.download)
+    app.post("/file/download", sec.verify_auth, file_control.download)
 
     const user_control = require("./user_control")
     app.post("/users/publickey", sec.verify_auth, user_control.getPublicKey)
