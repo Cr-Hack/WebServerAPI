@@ -173,7 +173,7 @@ exports.download = async function(req, res){
                 error: "Incorrect request input"
             })
         } else {
-                mysql_controller.findPath(req.pool_SQL, body.fileID, 
+                mysql_controller.findPath(req.pool_SQL, body.fileID, req.user.userID, 
                 (error, results) => {
                     if (error || !results) {
                         res.status(400).send({

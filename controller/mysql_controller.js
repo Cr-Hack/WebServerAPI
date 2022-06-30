@@ -105,9 +105,9 @@ exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, 
     });
 }
 
-exports.findPath = function(mysql, id, callback) {
+exports.findPath = function(mysql, fileID, userID, callback) {
     mysql.query(
-        "SELECT path FROM files WHERE fileID = ?", [id],
+        "SELECT f.path FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ?", [userID, fileID],
         (error, results) => {
             if (error) {
                 console.log("Error with database.", error)
