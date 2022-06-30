@@ -118,7 +118,7 @@ exports.login = function(req, res) {
                     )
                 } else {
                     console.log('There is no user with this auth (login)')
-                    res.status(400).send({ error: "There is no user with that email." })
+                    res.status(400).send({ error: "User and password doesn't match." })
                 }
             }
         )
