@@ -12,59 +12,22 @@ exports.verify_email = function(value) {
     return result != null && result.length == 1 && result[0] == value
 }
 
-exports.verify_existAccount = function(mysql, email, callback) {
-    mysql.query(
-        'SELECT * FROM users WHERE UPPER(email) = UPPER(?)', [email], (error, results) => {
-            if (error) {
-                console.log(error)
-                callback(-1)
-            } else if (results.length > 0) {
-                console.log("message : Utilisateur présent dans la base de donnée")
-                callback(0)
-            } else {
-                console.log("message : L'utilisateur n'est pas présent dans la base de donnée")
-                callback(1)
-            }
-        }
-    )
-}
-
-// exports.verify_existFile = function(){
-//     pool_SQL.query(
-//         'SELECT * FROM Files', (error, results) => {
-//             if(error){
-//                 console.log("message : erreur")
-//                 return -1
-//             }
-//             else if (results.length > 0){
-//                 console.log("Results:")
-//                 console.log(results);
-//                 console.log("message : La table Files n'est pas vide")
-//                 return 0
-//             }
-//             else {
-//                 console.log(results);
-//                 console.log("message : La table Files est vide")
-//                 return 1
+// exports.verify_existAccount = async function(mysql, email) {
+//     mysql.query(
+//         'SELECT * FROM users WHERE UPPER(email) = UPPER(?)', [email], (error, results) => {
+//             if (error) {
+//                 console.log(error)
+//                 callback(-1)
+//             } else if (results.length > 0) {
+//                 console.log("message : Utilisateur présent dans la base de donnée")
+//                 callback(0)
+//             } else {
+//                 console.log("message : L'utilisateur n'est pas présent dans la base de donnée")
+//                 callback(1)
 //             }
 //         }
 //     )
 // }
-
-exports.connectionUsersFiles = function(mysql, user, callback) {
-    mysql.query(
-        'SELECT * FROM have_acces h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [user.userID],
-        (error, results) => {
-            if (error) {
-                console.log("message : erreur")
-                callback(-1)
-            } else {
-                console.log("Succes")
-                callback(1)
-            }
-        }
-    )
-}
 
 exports.verify_space = function(first_name, last_name, email) {
     first_name.replace(/^ *| *$|(  +)/g, '')

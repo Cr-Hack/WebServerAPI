@@ -70,14 +70,21 @@ require('./routes/base_routes')(app);
  */
 const mysql_init = require("./controller/mysqlInit.js");
 
-function initmysql() {
-    setTimeout(() => {
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
+async function initmysql() {
+    var initialized = false
+    while (!initialized) {
+        await sleep(5000)
         try {
             mysql_init(pool_SQL)
-        } catch (error) {
-            initmysql()
-        }
-    }, 5000)
+            initialized = true
+        } catch (error) {}
+    }
 }
 
 app.listen(5000, () => {

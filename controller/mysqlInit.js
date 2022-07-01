@@ -39,6 +39,7 @@ module.exports = function(mysql) {
             fileID INT,
             sender VARCHAR(250) NOT NULL,
             publickey TEXT NOT NULL,
+            iv TEXT NOT NULL,
             PRIMARY KEY(userID, fileID),
             FOREIGN KEY(userID) REFERENCES users(userID),
             FOREIGN KEY(fileID) REFERENCES files(fileID) ON DELETE CASCADE

@@ -2,58 +2,23 @@ const sec = require("../utils/security")
 const uuid = require("uuid")
 const mysql_controller = require("../controller/mysql_controller")
 
-exports.view = function(req, res) {
-    req.pool_SQL.query(
-            'SELECT f.fileID, f.name, f.type, f.size, f.datedeposite FROM have_access h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [req.user.userID],
-            (error, results) => {
-                if (error) {
-                    console.log(error)
-                    res.status(500).send({ message: "Error when getting files from BDD." })
-                } else {
-                    if (results && results.length > 0) {
-                        console.log(results)
-                        res.status(200).json({
-                            message: "Voici la table files",
-                            files: results
-                        })
-                    } else {
-                        res.status(404).json({
-                            message: "There is no file"
-                        })
-                    }
-                }
-            }
-        )
-        // connectionUsersFiles(req.pool_SQL, req.user,
-        //     (exists) => {
-        //         if (exists == -1) {
-        //             if (error) {
-        //                 console.log(error)
-        //                 console.log("Pas de fichier rattacher à l'utilisateur")
-        //                 res.status(500).send({ message: erreur })
-        //             }
-        //         } else if (exists == 1) {
-        //             req.pool_SQL.query(
-        //                 'SELECT f.name, f.path, f.type, f.size, f.datedeposite FROM have_acces h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID where u.userID = ?', [user.userID],
-        //                 (error, results) => {
-        //                     if (error) {
-        //                         console.log(error)
-        //                         res.status(500).send({ message: erreur })
-        //                     } else {
-        //                         console.log('-->results')
-        //                         console.log(results)
-        //                         res.json({ message: "Voici la table files" })
-        //                     }
-        //                 }
-        //             )
-        //         }
-        //     }
-        // )
+exports.view = async function(req, res) {
+    try {
+        let files = await mysql_controller.getFiles(req.pool_SQL, req.user.userID)
+        res.status(200).json({
+            files: files
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(404).json({
+            message: "There is no file"
+        })
+    }
 }
 
 const fs = require('fs')
 
-exports.delete = function(req, res) {
+exports.delete = async function(req, res) {
     let body = req.body
     if (
         body.fileID == undefined ||
@@ -62,59 +27,53 @@ exports.delete = function(req, res) {
             error: "Incorrect request input"
         })
     } else {
-        mysql_controller.getFileById(req.pool_SQL, body.fileID, req.user.userID,
-            (error, results) => {
-                console.log(error, results)
-                if (error || !results) {
-                    res.status(400).send({
-                        error: "Il n'y a pas de fichier avec cet ID"
-                    })
-                } else {
-                    let path = results.path
-                    req.pool_SQL.query(
-                        'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ?', [req.body.fileID, req.user.userID],
-                        (error, results) => {
-                            if (error) {
-                                console.log(error)
-                                res.status(500).send({ message: error })
-                            } else {
-                                if (results && results.affectedRows > 0) {
-                                    fs.unlink(path, (err) => {
-                                        if (err) {
-                                            console.error(err)
-                                            return
-                                        }
-                                    })
-                                    console.log(results)
-                                    res.json({ message: "Le fichier est supprimé" })
-                                } else {
-                                    console.log(results)
-                                    res.json({ message: "Il n'y pas de fichier avec cet ID" })
-                                }
-                            }
-                        }
-                    )
+        try {
+            console.log("trying...")
+            let file = await mysql_controller.getFileById(req.pool_SQL, body.fileID, req.user.userID)
+            let path = file.path
+            let isdeleted = await mysql_controller.deleteFile(req.pool_SQL, body.fileID, req.user.userID)
+            if (!isdeleted) throw "Il n'y pas de fichier avec cet ID"
+            fs.unlink(path, (err) => {
+                if (err) {
+                    console.error(err)
+                    return
                 }
-            }
-        )
+            })
+            res.status(200).send({ message: "Le fichier est supprimé" })
+        } catch (error) {
+            console.log(error)
+            res.status(400).send({
+                message: "Il n'y pas de fichier avec cet ID"
+            })
+        }
     }
 }
 
 exports.upload = async function(req, res) {
     try {
         let body = req.body
-        if (!req.files) {
-            res.status(400).send({
-                error: "No file uploaded"
-            })
-        } else if (!body.receiverID ||
+        if (!body.receiverID ||
             !body.name ||
             !body.type ||
             !body.size ||
+            !body.receiverkey ||
+            !body.senderkey ||
+            !body.receiverIV ||
+            !body.senderIV ||
             sec.verify_injection(body.receiverID) ||
             sec.verify_injection(body.name) ||
             sec.verify_injection(body.type) ||
-            sec.verify_injection(body.size)
+            sec.verify_injection(body.size) ||
+            sec.verify_injection(body.receiverkey) ||
+            sec.verify_injection(body.senderkey) ||
+            sec.verify_injection(body.receiverIV) ||
+            sec.verify_injection(body.senderIV) ||
+            !sec.verify_length(body.name, 250) ||
+            !sec.verify_length(body.type, 50) ||
+            !sec.verify_length(body.receiverkey, 4500) ||
+            !sec.verify_length(body.senderkey, 4500) ||
+            !sec.verify_length(body.receiverIV, 4500) ||
+            !sec.verify_length(body.senderIV, 4500)
         ) {
             res.status(400).send({
                 error: "Incorrect request input"
@@ -131,25 +90,33 @@ exports.upload = async function(req, res) {
                             error: "There is no user with id" + body.receiverID
                         })
                     } else {
-                        let encryptedFile = req.files.encryptedFile
                         let id = uuid.v4()
                         let path = "/var/node/files/" + id + ".encrypted"
-                        encryptedFile.mv(path)
-                        console.log(encryptedFile)
-                        mysql_controller.insertNewFile(req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type, body.size, "Receiver key lol", "Sender key lol",
-                            (error) => {
-                                if (error) {
-                                    console.log(error)
-                                    res.status(500).send({
-                                        error: "Error when getting files from BDD"
-                                    })
-                                } else {
-                                    res.status(200).send({
-                                        message: "Yes !"
-                                    })
-                                }
+                        fs.writeFile(path, body.data, function(err) {
+                            if (err) {
+                                res.status(500).send({
+                                    error: "Error when storing the data."
+                                })
+                            } else {
+                                console.log('File is created successfully.');
+                                mysql_controller.insertNewFile(
+                                    req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type,
+                                    body.size, body.receiverkey, body.senderkey, body.receiverIV, body.senderIV,
+                                    (error) => {
+                                        if (error) {
+                                            console.log(error)
+                                            res.status(500).send({
+                                                error: "Error when getting files from BDD"
+                                            })
+                                        } else {
+                                            res.status(200).send({
+                                                message: "File uploaded !"
+                                            })
+                                        }
+                                    }
+                                )
                             }
-                        )
+                        });
                     }
                 }
             )
@@ -162,6 +129,10 @@ exports.upload = async function(req, res) {
     }
 }
 
+function bufferToString(arrayBuf) {
+    return String.fromCharCode.apply(null, new Uint8Array(arrayBuf));
+}
+
 exports.download = async function(req, res) {
     try {
         let body = req.body
@@ -172,29 +143,18 @@ exports.download = async function(req, res) {
                 error: "Incorrect request input"
             })
         } else {
-            mysql_controller.findPath(req.pool_SQL, body.fileID, req.user.userID,
-                (error, results) => {
-                    if (error || !results) {
-                        res.status(400).send({
-                            error: "The file does not exists"
-                        })
-                    } else {
-                        res.download(results.path, function(error) {
-                            if (error) {
-                                console.log(error)
-                                    // res.status(500).send({
-                                    //     error: "Error when getting files to BDD"
-                                    // })
-                            } else {
-                                console.log("Yes download")
-                                    // res.status(200).send({
-                                    //     message: "Yes download !"
-                                    // })
-                            }
-                        })
-                    }
-                }
-            )
+            let file = await mysql_controller.getFileById(req.pool_SQL, body.fileID, req.user.userID)
+            const data = bufferToString(fs.readFileSync(file.path))
+            res.status(200).send({
+                data: data,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                datedeposite: file.datedeposite,
+                sender: file.sender,
+                publickey: file.publickey,
+                iv: file.iv
+            })
         }
     } catch (err) {
         console.log(err)
