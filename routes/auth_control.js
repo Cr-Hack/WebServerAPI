@@ -4,6 +4,7 @@ const auth_config = require("../config/auth_conf")
 
 exports.register = async function(req, res) {
     let body = req.body
+    console.log(body)
     if (
         body.last_name == undefined ||
         body.first_name == undefined ||
@@ -16,17 +17,13 @@ exports.register = async function(req, res) {
         sec.verify_injection(body.last_name) ||
         sec.verify_injection(body.first_name) ||
         sec.verify_injection(body.email) ||
-        sec.verify_injection(body.privatekey) ||
-        sec.verify_injection(body.publickey) ||
-        sec.verify_injection(body.iv) ||
-        sec.verify_injection(body.salt) ||
         sec.verify_injection(body.hashpassword) ||
         !sec.verify_length(body.last_name, 50) ||
         !sec.verify_length(body.first_name, 50) ||
         !sec.verify_length(body.email, 250) ||
         !sec.verify_length(body.hashpassword, 4000) ||
-        !sec.verify_length(body.privatekey, 4500) ||
-        !sec.verify_length(body.publickey, 4500) ||
+        !sec.verify_length(body.privatekey, 10000) ||
+        !sec.verify_length(body.publickey, 10000) ||
         !sec.verify_length(body.iv, 4500) ||
         !sec.verify_length(body.salt, 4500) ||
         !sec.verify_email(body.email)) {
