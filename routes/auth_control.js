@@ -4,7 +4,6 @@ const auth_config = require("../config/auth_conf")
 
 exports.register = async function(req, res) {
     let body = req.body
-    console.log(body)
     if (
         body.last_name == undefined ||
         body.first_name == undefined ||
