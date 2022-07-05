@@ -24,13 +24,13 @@ var corsOptions = {
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
-app.use(express.json())
+app.use(express.json({ limit: '50Gb' }))
 
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true, limit: '50Gb' }))
 
 // Enabeling file upload
-app.use(fileupload({ createParentPath: true }))
+app.use(fileupload({ createParentPath: true, limits: { fileSize: 1250000000 } }))
 
 const auth_config = require("./config/auth_conf.js")
 

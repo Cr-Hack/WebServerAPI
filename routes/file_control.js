@@ -49,10 +49,37 @@ exports.delete = async function(req, res) {
     }
 }
 
+function stringToBuffer(str) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
 exports.upload = async function(req, res) {
     try {
         let body = req.body
-        if (!body.receiverID ||
+            // console.log(!body.receiverID)
+            // console.log(!body.name)
+            // console.log(!body.type)
+            // console.log(!body.size)
+            // console.log(!body.receiverkey)
+            // console.log(!body.senderkey)
+            // console.log(!body.receiverIV)
+            // console.log(!body.senderIV)
+            // console.log(!body.receiverID)
+            // console.log(sec.verify_injection(body.receiverID))
+            // console.log(sec.verify_injection(body.size))
+            // console.log(!sec.verify_length(body.name, 250))
+            // console.log(!sec.verify_length(body.type, 50))
+            // console.log(!sec.verify_length(body.receiverkey, 4500))
+            // console.log(!sec.verify_length(body.senderkey, 4500))
+            // console.log(!sec.verify_length(body.receiverIV, 4500))
+            // console.log(!sec.verify_length(body.senderIV, 4500))
+        if (!req.files.data ||
+            !body.receiverID ||
             !body.name ||
             !body.type ||
             !body.size ||
@@ -61,13 +88,7 @@ exports.upload = async function(req, res) {
             !body.receiverIV ||
             !body.senderIV ||
             sec.verify_injection(body.receiverID) ||
-            sec.verify_injection(body.name) ||
-            sec.verify_injection(body.type) ||
             sec.verify_injection(body.size) ||
-            sec.verify_injection(body.receiverkey) ||
-            sec.verify_injection(body.senderkey) ||
-            sec.verify_injection(body.receiverIV) ||
-            sec.verify_injection(body.senderIV) ||
             !sec.verify_length(body.name, 250) ||
             !sec.verify_length(body.type, 50) ||
             !sec.verify_length(body.receiverkey, 4500) ||
@@ -92,31 +113,59 @@ exports.upload = async function(req, res) {
                     } else {
                         let id = uuid.v4()
                         let path = "/var/node/files/" + id + ".encrypted"
-                        fs.writeFile(path, body.data, function(err) {
-                            if (err) {
-                                res.status(500).send({
-                                    error: "Error when storing the data."
-                                })
-                            } else {
-                                console.log('File is created successfully.');
-                                mysql_controller.insertNewFile(
-                                    req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type,
-                                    body.size, body.receiverkey, body.senderkey, body.receiverIV, body.senderIV,
-                                    (error) => {
-                                        if (error) {
-                                            console.log(error)
-                                            res.status(500).send({
-                                                error: "Error when getting files from BDD"
-                                            })
-                                        } else {
-                                            res.status(200).send({
-                                                message: "File uploaded !"
-                                            })
-                                        }
-                                    }
-                                )
+                            /*
+                            var dataArray = []
+                            for (let x in body.data) {
+                                dataArray.push(body.data[x])
                             }
-                        });
+                            var data = Uint8Array.from(dataArray)
+                            */
+                            //var buff = Buffer.from(body.data)
+                        req.files.data.mv(path)
+                        console.log('File is created successfully.');
+                        mysql_controller.insertNewFile(
+                                req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type,
+                                body.size, body.receiverkey, body.senderkey, body.receiverIV, body.senderIV,
+                                (error) => {
+                                    if (error) {
+                                        console.log(error)
+                                        res.status(500).send({
+                                            error: "Error when getting files from BDD"
+                                        })
+                                    } else {
+                                        res.status(200).send({
+                                            message: "File uploaded !"
+                                        })
+                                    }
+                                }
+                            )
+                            /*
+                            fs.writeFile(path, buff, function(err) {
+                                if (err) {
+                                    res.status(500).send({
+                                        error: "Error when storing the data."
+                                    })
+                                } else {
+                                    console.log('File is created successfully.');
+                                    mysql_controller.insertNewFile(
+                                        req.pool_SQL, body.receiverID, req.user.userID, body.name, path, body.type,
+                                        body.size, body.receiverkey, body.senderkey, body.receiverIV, body.senderIV,
+                                        (error) => {
+                                            if (error) {
+                                                console.log(error)
+                                                res.status(500).send({
+                                                    error: "Error when getting files from BDD"
+                                                })
+                                            } else {
+                                                res.status(200).send({
+                                                    message: "File uploaded !"
+                                                })
+                                            }
+                                        }
+                                    )
+                                }
+                            });
+                            */
                     }
                 }
             )
@@ -130,31 +179,55 @@ exports.upload = async function(req, res) {
 }
 
 function bufferToString(arrayBuf) {
-    return String.fromCharCode.apply(null, new Uint8Array(arrayBuf));
+    var str = ""
+    var length = arrayBuf.byteLength
+    var remaining = arrayBuf.byteLength
+    while (remaining > 0) {
+        let remain = 500
+        if (remaining < 500) remain = remaining
+        str += String.fromCharCode.apply(null, new Uint8Array(arrayBuf.slice((length - remaining), (length - remaining) + remain)))
+        remaining -= remain
+    }
+    return str
 }
 
 exports.download = async function(req, res) {
     try {
         let body = req.body
-        if (
-            body.fileID == undefined ||
+        if (!body.fileID ||
             sec.verify_injection(body.fileID)) {
             res.status(400).send({
                 error: "Incorrect request input"
             })
         } else {
             let file = await mysql_controller.getFileById(req.pool_SQL, body.fileID, req.user.userID)
-            const data = bufferToString(fs.readFileSync(file.path))
-            res.status(200).send({
-                data: data,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                datedeposite: file.datedeposite,
-                sender: file.sender,
-                publickey: file.publickey,
-                iv: file.iv
-            })
+            if (body.file) {
+                res.download(file.path, function(error) {
+                        if (error) {
+                            console.log(error)
+                        } else {
+                            console.log("Yes download")
+                        }
+                    })
+                    //res.send(fs.readFileSync(file.path))
+                    // res.download(file.path, function(error) {
+                    //     if (error) {
+                    //         console.log(error)
+                    //     } else {
+                    //         console.log("Yes download")
+                    //     }
+                    // })
+            } else {
+                res.status(200).send({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    datedeposite: file.datedeposite,
+                    sender: file.sender,
+                    publickey: file.publickey,
+                    iv: file.iv
+                })
+            }
         }
     } catch (err) {
         console.log(err)
