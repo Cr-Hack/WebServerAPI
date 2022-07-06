@@ -176,7 +176,7 @@ exports.getFileById = function(mysql, fileID, partNumber, userID) {
         try {
             let result = await query(
                 mysql,
-                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ? and f.pat_number = ?", [userID, fileID, partNumber]
+                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ? and f.part_number = ?", [userID, fileID, partNumber]
             )
             if (!result || result.length == 0) throw "Il n'y a pas de fichier avec cet ID"
             resolve(result[0])
