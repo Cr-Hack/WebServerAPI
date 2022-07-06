@@ -90,12 +90,12 @@ exports.insertNewFile = function(mysql, part_number, total_parts, receiverID, se
                 let fileID = result_insert_file.insertId
                 let result_insert_sender = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [senderID, fileID, true, senderKey, senderIV]
+                    "INSERT INTO have_access (userID, fileID, part_number, sender, aeskey, iv) VALUES (?,?,?,?,?,?)", [senderID, fileID, part_number, true, senderKey, senderIV]
                 )
                 if (!result_insert_sender) throw "Error with database"
                 let result_insert_receiver = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [receiverID, fileID, false, receiverKey, receiverIV]
+                    "INSERT INTO have_access (userID, fileID, part_number, sender, aeskey, iv) VALUES (?,?,?,?,?,?)", [receiverID, fileID, part_number, false, receiverKey, receiverIV]
                 )
                 if (!result_insert_receiver) throw "Error with database"
                 connection.commit()
@@ -129,12 +129,12 @@ exports.insertPartFile = function(mysql, fileID, part_number, total_parts, recei
                 if (!result_insert_file) throw "Error with database"
                 let result_insert_sender = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [senderID, fileID, true, senderKey, senderIV]
+                    "INSERT INTO have_access (userID, fileID, part_number, sender, aeskey, iv) VALUES (?,?,?,?,?,?)", [senderID, fileID, part_number, true, senderKey, senderIV]
                 )
                 if (!result_insert_sender) throw "Error with database"
                 let result_insert_receiver = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [receiverID, fileID, false, receiverKey, receiverIV]
+                    "INSERT INTO have_access (userID, fileID, part_number, sender, aeskey, iv) VALUES (?,?,?,?,?,?)", [receiverID, fileID, part_number, false, receiverKey, receiverIV]
                 )
                 if (!result_insert_receiver) throw "Error with database"
                 connection.commit()
@@ -206,7 +206,7 @@ exports.getFiles = function(mysql, userID) {
         try {
             let result = await query(
                 mysql,
-                'SELECT f.fileID, f.name, f.type, f.size, f.datedeposite, us.email as sender, us2.email as other FROM have_access h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID INNER JOIN have_access has ON has.fileID = f.fileID AND has.sender = true INNER JOIN users us ON us.userID = has.userID INNER JOIN have_access has2 ON has2.fileID = f.fileID AND has2.userID != u.userID INNER JOIN users us2 ON us2.userID = has2.userID where u.userID = ?', [userID]
+                'SELECT f.fileID, f.name, f.type, f.size, f.datedeposite, us.email as sender, us2.email as other FROM have_access h INNER JOIN users u ON u.userID = h.userID INNER JOIN files f ON f.fileID = h.fileID and f.part_number = 0 INNER JOIN have_access has ON has.fileID = f.fileID AND has.sender = true INNER JOIN users us ON us.userID = has.userID INNER JOIN have_access has2 ON has2.fileID = f.fileID AND has2.userID != u.userID INNER JOIN users us2 ON us2.userID = has2.userID where u.userID = ?', [userID]
             )
             if (!result || result.length == 0) throw "There is no file."
             resolve(result)
