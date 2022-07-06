@@ -111,7 +111,6 @@ exports.login = async function(req, res) {
                             salt: user.salt
                         })
                     } else {
-                        console.log('User and pass no match. aborting.')
                         res.status(400).send({
                             error: "User and password doesn't match."
                         })

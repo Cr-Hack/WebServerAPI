@@ -28,7 +28,6 @@ exports.delete = async function(req, res) {
         })
     } else {
         try {
-            console.log("trying...")
             let files = await mysql_controller.getAllFilePartById(req.pool_SQL, body.fileID, req.user.userID)
             for (var i = 0; i < files.length; i++) {
                 try {
@@ -38,9 +37,7 @@ exports.delete = async function(req, res) {
                     fs.unlink(path, (err) => {
                         if (err) console.error(err)
                     })
-                } catch (error) {
-                    console.log(error)
-                }
+                } catch (error) {}
             }
             res.status(200).send({ message: "Le fichier est supprimé" })
         } catch (error) {
@@ -91,7 +88,6 @@ exports.upload = async function(req, res) {
                         let id = uuid.v4()
                         let path = "/var/node/files/" + id + ".encrypted"
                         req.files.data.mv(path)
-                        console.log('File is created successfully.');
                         if (body.fileID) {
                             mysql_controller.insertPartFile(req.pool_SQL, body.fileID,
                                 body.partNumber, body.totalParts, body.receiverID, req.user.userID, body.name, path, body.type,
@@ -156,8 +152,6 @@ exports.download = async function(req, res) {
                 res.download(file.path, function(error) {
                     if (error) {
                         console.log(error)
-                    } else {
-                        console.log("Yes download")
                     }
                 })
             } else {

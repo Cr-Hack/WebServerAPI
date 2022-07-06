@@ -176,7 +176,7 @@ exports.getFileById = function(mysql, fileID, partNumber, userID) {
         try {
             let result = await query(
                 mysql,
-                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ? and f.pat_number = ?", [userID, fileID, partNumber]
+                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID AND h.part_number = f.part_number WHERE h.userID = ? and f.fileID = ? and f.part_number = ?", [userID, fileID, partNumber]
             )
             if (!result || result.length == 0) throw "Il n'y a pas de fichier avec cet ID"
             resolve(result[0])
@@ -221,7 +221,7 @@ exports.deleteFilePart = function(mysql, fileID, part_number, userID) {
         try {
             let result = await query(
                 mysql,
-                'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ? and f.part_number = ?', [fileID, userID, part_number]
+                'delete f from have_access h inner join files f on h.fileID = f.fileID and h.part_number = f.part_number inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ? and f.part_number = ?', [fileID, userID, part_number]
             )
             if (!result || result.affectedRows == 0) throw "Il n'y pas de fichier avec cet ID"
             resolve(true)

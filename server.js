@@ -83,7 +83,7 @@ async function initmysql() {
         try {
             mysql_init(pool_SQL)
             initialized = true
-            console.log("Server has started!")
+            console.log("Server has started! Ready to listen on port 5000")
         } catch (error) {}
     }
 }
