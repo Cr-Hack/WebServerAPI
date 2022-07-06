@@ -83,11 +83,11 @@ async function initmysql() {
         try {
             mysql_init(pool_SQL)
             initialized = true
+            console.log("Server has started!")
         } catch (error) {}
     }
 }
 
 app.listen(5000, () => {
     initmysql()
-    console.log("Server has started!")
 })

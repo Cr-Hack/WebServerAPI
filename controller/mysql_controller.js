@@ -74,7 +74,7 @@ exports.insertNewUser = function(mysql, first_name, last_name, email, bcryptedPa
     })
 }
 
-exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, size, receiverKey, senderKey, receiverIV, senderIV, callback) {
+exports.insertNewFile = function(mysql, part_number, total_parts, receiverID, senderID, name, path, type, size, receiverKey, senderKey, receiverIV, senderIV, callback) {
     mysql.getConnection(async function(err, connection) {
         if (err) {
             callback(error, null)
@@ -84,18 +84,57 @@ exports.insertNewFile = function(mysql, receiverID, senderID, name, path, type, 
             try {
                 let result_insert_file = await query(
                     mysql,
-                    "INSERT INTO files (name, path, type, size, datedeposite) VALUES (?,?,?,?,now())", [name, path, type, size]
+                    "INSERT INTO files (part_number, total_parts, name, path, type, size, datedeposite) VALUES (?,?,?,?,?,?,now())", [part_number, total_parts, name, path, type, size]
                 )
                 if (!result_insert_file) throw "Error with database"
                 let fileID = result_insert_file.insertId
                 let result_insert_sender = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, publickey, iv) VALUES (?,?,?,?,?)", [senderID, fileID, true, senderKey, senderIV]
+                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [senderID, fileID, true, senderKey, senderIV]
                 )
                 if (!result_insert_sender) throw "Error with database"
                 let result_insert_receiver = await query(
                     mysql,
-                    "INSERT INTO have_access (userID, fileID, sender, publickey, iv) VALUES (?,?,?,?,?)", [receiverID, fileID, false, receiverKey, receiverIV]
+                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [receiverID, fileID, false, receiverKey, receiverIV]
+                )
+                if (!result_insert_receiver) throw "Error with database"
+                connection.commit()
+                connection.release()
+                callback(null, { fileID: fileID })
+            } catch (error) {
+                connection.rollback()
+                connection.release();
+                callback(error, null)
+            }
+        } catch (err) {
+            connection.rollback()
+            connection.detroy();
+            callback(err)
+        }
+    });
+}
+
+exports.insertPartFile = function(mysql, fileID, part_number, total_parts, receiverID, senderID, name, path, type, size, receiverKey, senderKey, receiverIV, senderIV, callback) {
+    mysql.getConnection(async function(err, connection) {
+        if (err) {
+            callback(error, null)
+        }
+        try {
+            connection.beginTransaction()
+            try {
+                let result_insert_file = await query(
+                    mysql,
+                    "INSERT INTO files (fileID, part_number, total_parts, name, path, type, size, datedeposite) VALUES (?,?,?,?,?,?,?,now())", [fileID, part_number, total_parts, name, path, type, size]
+                )
+                if (!result_insert_file) throw "Error with database"
+                let result_insert_sender = await query(
+                    mysql,
+                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [senderID, fileID, true, senderKey, senderIV]
+                )
+                if (!result_insert_sender) throw "Error with database"
+                let result_insert_receiver = await query(
+                    mysql,
+                    "INSERT INTO have_access (userID, fileID, sender, aeskey, iv) VALUES (?,?,?,?,?)", [receiverID, fileID, false, receiverKey, receiverIV]
                 )
                 if (!result_insert_receiver) throw "Error with database"
                 connection.commit()
@@ -132,15 +171,30 @@ exports.findPath = function(mysql, fileID, userID, callback) {
     )
 }
 
-exports.getFileById = function(mysql, fileID, userID) {
+exports.getFileById = function(mysql, fileID, partNumber, userID) {
     return new Promise(async function(resolve, reject) {
         try {
             let result = await query(
                 mysql,
-                "SELECT f.fileID, f.name, f.path, f.type, f.size, f.datedeposite, h.sender, h.publickey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ?", [userID, fileID]
+                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ? and f.pat_number = ?", [userID, fileID, partNumber]
             )
             if (!result || result.length == 0) throw "Il n'y a pas de fichier avec cet ID"
             resolve(result[0])
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+exports.getAllFilePartById = function(mysql, fileID, userID) {
+    return new Promise(async function(resolve, reject) {
+        try {
+            let result = await query(
+                mysql,
+                "SELECT f.fileID, f.name, f.path, f.part_number, f.total_parts, f.type, f.size, f.datedeposite, h.sender, h.aeskey, h.iv FROM files f INNER JOIN have_access h on h.fileID = f.fileID WHERE h.userID = ? and f.fileID = ?", [userID, fileID]
+            )
+            if (!result || result.length == 0) throw "Il n'y a pas de fichier avec cet ID"
+            resolve(result)
         } catch (error) {
             reject(error)
         }
@@ -162,12 +216,12 @@ exports.getFiles = function(mysql, userID) {
     })
 }
 
-exports.deleteFile = function(mysql, fileID, userID) {
+exports.deleteFilePart = function(mysql, fileID, part_number, userID) {
     return new Promise(async function(resolve, reject) {
         try {
             let result = await query(
                 mysql,
-                'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ?', [fileID, userID]
+                'delete f from have_access h inner join files f on h.fileID = f.fileID inner join users u on u.userID = h.userID where f.fileID = ? and u.userID = ? and f.part_number = ?', [fileID, userID, part_number]
             )
             if (!result || result.affectedRows == 0) throw "Il n'y pas de fichier avec cet ID"
             resolve(true)
