@@ -19,7 +19,7 @@ const app = express();
 // If we use cors then:
 
 var corsOptions = {
-    origin: ("http://localhost", "*")
+    origin: ("https://localhost", "http://localhost", "*")
 };
 app.use(cors(corsOptions));
 
