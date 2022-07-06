@@ -90,7 +90,7 @@ exports.upload = async function(req, res) {
             sec.verify_injection(body.receiverID) ||
             sec.verify_injection(body.size) ||
             !sec.verify_length(body.name, 250) ||
-            !sec.verify_length(body.type, 50) ||
+            !sec.verify_length(body.type, 250) ||
             !sec.verify_length(body.receiverkey, 4500) ||
             !sec.verify_length(body.senderkey, 4500) ||
             !sec.verify_length(body.receiverIV, 4500) ||

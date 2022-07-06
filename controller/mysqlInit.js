@@ -23,9 +23,9 @@ module.exports = function(mysql) {
             fileID INT NOT NULL AUTO_INCREMENT,
             name VARCHAR(250) NOT NULL,
             path VARCHAR(250) NOT NULL,
-            type VARCHAR(50) NOT NULL,
+            type VARCHAR(250) NOT NULL,
             size DECIMAL(15,2) NOT NULL,
-            datedeposite DATE NOT NULL,
+            datedeposite DATETIME NOT NULL,
             PRIMARY KEY(fileID)
          );`,
         function(err, result) {
