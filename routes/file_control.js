@@ -60,7 +60,7 @@ exports.upload = async function(req, res) {
             !body.name ||
             !body.type ||
             !body.size ||
-            !body.partNumber ||
+            body.partNumber == undefined ||
             !body.totalParts ||
             !body.receiverkey ||
             !body.senderkey ||
@@ -144,8 +144,8 @@ exports.upload = async function(req, res) {
 exports.download = async function(req, res) {
     try {
         let body = req.body
-        if (!body.fileID ||
-            !body.partNumber ||
+        if (body.fileID == undefined ||
+            body.partNumber == undefined ||
             sec.verify_injection(body.fileID)) {
             res.status(400).send({
                 error: "Incorrect request input"
@@ -165,7 +165,7 @@ exports.download = async function(req, res) {
                     name: file.name,
                     type: file.type,
                     size: file.size,
-                    parts: file.total_parts,
+                    totalParts: file.total_parts,
                     partNumber: file.part_number,
                     datedeposite: file.datedeposite,
                     sender: file.sender,
