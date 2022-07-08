@@ -89,8 +89,8 @@ exports.login = async function(req, res) {
                         })
                     } else if (isPasswordMatch) {
                         let token = req.jwt.sign({
-                                firstname: user.first_name,
-                                lastname: user.last_name,
+                                firstname: user.firstname,
+                                lastname: user.lastname,
                                 userID: user.userID,
                                 email: user.email,
                                 privatekey: user.privatekey,
@@ -101,8 +101,8 @@ exports.login = async function(req, res) {
                             auth_config.secret, { expiresIn: 86400 } // expires in 24 hours
                         );
                         res.status(202).send({
-                            firstname: user.first_name,
-                            lastname: user.last_name,
+                            firstname: user.firstname,
+                            lastname: user.lastname,
                             userID: user.userID,
                             token: token,
                             publicKey: user.publickey,
